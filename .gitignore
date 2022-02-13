@@ -1,0 +1,9 @@
+Cargo.lock
+node_modules
+public
+target
+tsconfig.tsbuildinfo
+typescript/wasm
+typescript/**/*.js
+web-build
+*.glsl-min

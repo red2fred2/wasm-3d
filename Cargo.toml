@@ -1,0 +1,32 @@
+[package]
+name = "wasm-engine"
+version = "0.1.0"
+edition = "2021"
+description = "Another fucking WASM game engine"
+license = "MPL 2.0"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+opt-level = 3
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+js-sys = "0.3.55"
+wasm-bindgen = "0.2.78"
+
+[dependencies.web-sys]
+version = "0.3.55"
+features = [
+  'Document',
+  'Element',
+  'HtmlCanvasElement',
+  'WebGlBuffer',
+  'WebGlRenderingContext',
+  'WebGlProgram',
+  'WebGlShader',
+  'Window',
+]

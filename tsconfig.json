@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "rootDir": "./typescript",
+        "target": "esnext",
+        "module": "esnext",
+        "moduleResolution": "node"
+    },
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}
