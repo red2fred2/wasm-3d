@@ -5,7 +5,7 @@ const glsl = require('gulp-glsl')
 const rename = require('gulp-rename')
 
 exports.default = cb => {
-	const LIST = ["shaders", 'wasm', 'typescript', 'rollup', 'minify', 'html']
+	const LIST = ["shaders", 'wasm', 'typescript', 'rollup', 'minify', 'html', 'docs']
 	for(task of LIST) execSync(`gulp ${task}`, {stdio: 'inherit'})
 	cb()
 }
@@ -88,4 +88,9 @@ exports.shaders = cb => {
 		.pipe(rename(path => {path.extname = '.glsl-min'}))
 		.pipe(dest('src/graphics/shaders'));
 		cb()
+}
+
+exports.docs = cb => {
+	execSync('cargo doc --document-private-items', {stdio: 'inherit'})
+	cb()
 }

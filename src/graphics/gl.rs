@@ -1,13 +1,12 @@
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
 
-/**
- * compile_shader
- * Compiles a GLSL shader
- * @param context the GL context this is rendering in
- * @param shader_type the type of shader being compiled
- * @param source the source code for this shader
- * @return A result that may either have a compiled shader or a compile error
- */
+/// Compiles a GLSL shader
+///
+/// * `context` - the GL context this is rendering in
+/// * `shader_type` - the type of shader being compiled
+/// * `source` - the source code for this shader
+///
+/// Returns - A result that may either have a compiled shader or a compile error
 pub fn compile_shader(
 	context: &WebGlRenderingContext,
 	shader_type: u32,
@@ -38,14 +37,13 @@ pub fn compile_shader(
 	}
 }
 
-/**
- * link_program
- * Links a webGL program
- * @param context the GL context this is rendering in
- * @param vertex_shader the vertex shader to link
- * @param frag_shader the fragment shader to link
- * @return a result containing the webGL program
- */
+/// Links a webGL program
+///
+/// * `context` - the GL context this is rendering in
+/// * `vertex_shader` - the vertex shader to link
+/// * `frag_shader` - the fragment shader to link
+///
+/// Returns - a result containing the webGL program
 pub fn link_program(
 	context: &WebGlRenderingContext,
 	vertex_shader: &WebGlShader,
@@ -77,21 +75,17 @@ pub fn link_program(
 	}
 }
 
-/**
- * clear
- * Clear the screen to prepare for drawing
- * @parm context the rendering context
- */
+/// Clear the screen to prepare for drawing
+///
+/// * `context` - the rendering context
 pub fn clear(context: &WebGlRenderingContext) {
 	context.clear_color(0.0, 0.0, 0.0, 1.0);
 	context.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
 }
 
-/**
- * draw
- * Draws the scene to the screen
- * @param context the rendering context
- */
+/// Draws the scene to the screen
+///
+/// * `context` - the rendering context
 pub fn draw(context: &WebGlRenderingContext) {
 	context.draw_arrays(WebGlRenderingContext::TRIANGLES, 0, 3i32);
 }

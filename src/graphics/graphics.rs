@@ -2,15 +2,16 @@ use wasm_bindgen::JsCast;
 use web_sys::WebGlRenderingContext;
 use super::{gl, shaders};
 
-/**
- * Initialize
- */
+/// Initialize graphics
 pub fn init() {
 	// Set up the front end
 	let (context, screen_width, screen_height) = set_up_front_end();
 
-	// Compile and set the current program
-	let program = shaders::build_program(&context, shaders::BASIC_BITCH);
+	// Compile shaders
+	let shaders = shaders::compile_shaders(&context);
+
+	// Set shader
+	let program = &shaders[shaders::BASIC_BITCH];
     context.use_program(program.as_ref());
 
 	// Triangle vertices
@@ -20,9 +21,11 @@ pub fn init() {
 		 0.0,  0.7, 0.0
 	];
 
-	let buffer = context.create_buffer();
-	context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, buffer.as_ref());
+	// Initialize the array buffer
+	let array_buffer = context.create_buffer();
+	context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, array_buffer.as_ref());
 
+	// Set up the shared memory buffer between rust and the web
 	unsafe {
 		let vert_array = js_sys::Float32Array::view(&vertices);
 
@@ -36,22 +39,22 @@ pub fn init() {
     context.vertex_attrib_pointer_with_i32(0, 3, WebGlRenderingContext::FLOAT, false, 0, 0);
 	context.enable_vertex_attrib_array(0);
 
+	// Clear the screen then draw
 	gl::clear(&context);
 	gl::draw(&context);
 }
 
-/**
- * set_up_front_end
- * Sets up the window, canvas, and gets a valid rendering context for webGL
- * Shits the bed when it fails, because there's no reason to continue without it
- * @return a rendering context
- */
+/// Set up front end
+///
+/// Sets up the window, canvas, and returns a valid rendering context for webGL
+/// Shits the bed when it fails, because there's no reason to continue without it
+///
+/// returns - (rendering context, window width, window height)
 fn set_up_front_end() -> (WebGlRenderingContext, u32, u32) {
 	// Get to the canvas object
 	let window = web_sys::window().unwrap();
 	let document = window.document().unwrap();
-	let canvas = document
-		.get_element_by_id("webGL")
+	let canvas = document.get_element_by_id("webGL")
 		.unwrap()
 		.dyn_into::<web_sys::HtmlCanvasElement>()
 		.unwrap();
@@ -64,14 +67,9 @@ fn set_up_front_end() -> (WebGlRenderingContext, u32, u32) {
 	canvas.set_height(height);
 
 	// Get context
-	(
-		canvas
-			.get_context("webgl")
-			.unwrap()
-			.unwrap()
-			.dyn_into::<WebGlRenderingContext>()
-			.unwrap(),
-		width,
-		height
-	)
+	let context = canvas.get_context("webgl").unwrap().unwrap()
+		.dyn_into::<WebGlRenderingContext>().unwrap();
+
+	// Return
+	(context, width, height)
 }
