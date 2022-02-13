@@ -3,14 +3,14 @@ name = "wasm-engine"
 version = "0.1.0"
 edition = "2021"
 description = "Another fucking WASM game engine"
+repository = "https://github.com/red2fred2/wasm-3d"
 license = "MPL 2.0"
-respository = "https://github.com/red2fred2/wasm-3d"
 
 [profile.release]
 lto = true
 codegen-units = 1
 panic = "abort"
-opt-level = 3
+opt-level = "s"
 
 [lib]
 crate-type = ["cdylib"]
