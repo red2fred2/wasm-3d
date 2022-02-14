@@ -8,17 +8,17 @@ const FRAGMENT_SHADER: ShaderType = 1;
 const NUM_SHADER_TYPES: usize = 2;
 
 // Shader name indices
-type ShaderIndex = usize;
+pub type ShaderIndex = usize;
 pub const BASIC_BITCH: ShaderIndex = 0;
 
-const NUM_SHADERS: usize = 1;
+pub const NUM_SHADERS: usize = 1;
 
 /// An array including the shader source code
 const SHADER_SOURCE: [[&str; NUM_SHADER_TYPES]; NUM_SHADERS] = [
 
 	[   // Basic bitch shader
-		include_str!("shaders/here_vert.glsl-min"),
-		include_str!("shaders/orange_frag.glsl-min")
+		include_str!("here_vert.glsl-min"),
+		include_str!("orange_frag.glsl-min")
 	]
 ];
 

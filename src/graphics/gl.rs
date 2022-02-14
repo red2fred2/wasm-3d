@@ -86,6 +86,7 @@ pub fn clear(context: &WebGlRenderingContext) {
 /// Draws the scene to the screen
 ///
 /// * `context` - the rendering context
-pub fn draw(context: &WebGlRenderingContext) {
-	context.draw_arrays(WebGlRenderingContext::TRIANGLES, 0, 3i32);
+/// * `num_triangles` - the number of triangles to render
+pub fn draw(context: &WebGlRenderingContext, num_triangles: i32) {
+	context.draw_arrays(WebGlRenderingContext::TRIANGLES, 0, 3 * num_triangles);
 }
