@@ -10,7 +10,7 @@ license = "MPL 2.0"
 lto = true
 codegen-units = 1
 panic = "abort"
-opt-level = "s"
+opt-level = 3
 
 [lib]
 crate-type = ["cdylib"]
@@ -29,5 +29,5 @@ features = [
   'WebGlRenderingContext',
   'WebGlProgram',
   'WebGlShader',
-  'Window',
+  'Window'
 ]
