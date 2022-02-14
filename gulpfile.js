@@ -5,7 +5,7 @@ const glsl = require('gulp-glsl')
 const rename = require('gulp-rename')
 
 exports.default = cb => {
-	const LIST = ["shaders", 'wasm', 'typescript', 'rollup', 'minify', 'html', 'docs']
+	const LIST = ["shaders", 'wasm', 'typescript', 'rollup', 'minify', 'html']
 	for(task of LIST) execSync(`gulp ${task}`, {stdio: 'inherit'})
 	cb()
 }
