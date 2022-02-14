@@ -1,7 +1,6 @@
 use wasm_bindgen::prelude::*;
 
 pub mod graphics;
-pub mod object;
 
 /// Initialize rust
 ///

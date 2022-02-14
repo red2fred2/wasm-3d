@@ -1,9 +1,43 @@
 pub mod shaders;
 mod gl;
 
+use std::collections::HashMap;
+
 use wasm_bindgen::JsCast;
-use web_sys::WebGlRenderingContext;
-use crate::object::Object;
+use web_sys::{WebGlRenderingContext, WebGlProgram};
+
+use self::shaders::{ShaderSource, shader_sources::get_shader_sources};
+
+/// Compiles and links a shader program
+///
+/// * `context` - the webGL rendering context for this program
+/// * `index` - the index of the program to use
+///
+/// Returns - the built program
+pub fn build_program(context: &WebGlRenderingContext, source: &ShaderSource) -> Option<WebGlProgram> {
+
+	// Compile the vertex shader
+	let vertex_shader = gl::compile_shader(
+		context,
+		WebGlRenderingContext::VERTEX_SHADER,
+		source.vertex_shader.unwrap()
+	);
+
+
+	// Compile the fragment shader
+	let fragment_shader = gl::compile_shader(
+		context,
+		WebGlRenderingContext::FRAGMENT_SHADER,
+		source.fragment_shader.unwrap(),
+	);
+
+	// Link the program
+	match (vertex_shader, fragment_shader) {
+		(Ok(vert), Ok(frag)) => gl::link_program(&context, &vert, &frag).ok(),
+		_ => None
+	}
+}
+
 
 /// Initialize graphics
 pub fn init() {
@@ -11,7 +45,12 @@ pub fn init() {
 	let context = set_up_front_end();
 
 	// Compile shaders
-	let shaders = shaders::compile_shaders(&context);
+	let shader_source = get_shader_sources();
+	let mut shaders = HashMap::new();
+	for (name, source) in shader_source.iter() {
+		let compiled_shader = build_program(&context, source);
+		shaders.insert(name as &str, compiled_shader);
+	}
 
 	// Render a frame
 	render(&context, &shaders);
@@ -25,24 +64,10 @@ pub fn init() {
 /// * `shaders` - the compiled shaders available to use
 fn render(
 	context: &web_sys::WebGlRenderingContext,
-	shaders: &[std::option::Option<web_sys::WebGlProgram>; shaders::NUM_SHADERS]
+	shaders: &HashMap<&str, Option<WebGlProgram>>
 ) {
-	// Set object to render
-	let top_right = Object::new(
-		vec![
-			1.0, 1.0, 0.0,
-			0.0, 1.0, 0.0,
-			0.0, 0.0, 0.0,
-
-			0.0, 0.0, 0.0,
-			1.0, 1.0, 0.0,
-			1.0, 0.0, 0.0
-		],
-		shaders::BASIC_BITCH
-	);
-
 	// Set shader
-	let shader = &shaders[top_right.get_shader()];
+	let shader = shaders.get("Basic bitch").unwrap();
     context.use_program(shader.as_ref());
 
 	// Initialize the array buffer
@@ -53,7 +78,15 @@ fn render(
 	unsafe {
 		context.buffer_data_with_array_buffer_view(
 			WebGlRenderingContext::ARRAY_BUFFER,
-			&js_sys::Float32Array::view(top_right.get_vertices()),
+			&js_sys::Float32Array::view(&vec![
+				1.0, 1.0, 0.0,
+				0.0, 1.0, 0.0,
+				0.0, 0.0, 0.0,
+
+				0.0, 0.0, 0.0,
+				1.0, 1.0, 0.0,
+				1.0, 0.0, 0.0
+			]),
 			WebGlRenderingContext::STATIC_DRAW,
 		);
 	}
