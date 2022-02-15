@@ -1,4 +1,64 @@
+use wasm_bindgen::JsCast;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
+use super::shaders::ShaderSource;
+
+/// Compiles and links a shader program
+///
+/// * `context` - the webGL rendering context for this program
+/// * `index` - the index of the program to use
+///
+/// Returns - the built program
+pub fn build_program(context: &WebGlRenderingContext, source: &ShaderSource) -> Option<WebGlProgram> {
+
+	// Compile the vertex shader
+	let vertex_shader = compile_shader(
+		context,
+		WebGlRenderingContext::VERTEX_SHADER,
+		source.vertex_shader.unwrap()
+	);
+
+
+	// Compile the fragment shader
+	let fragment_shader = compile_shader(
+		context,
+		WebGlRenderingContext::FRAGMENT_SHADER,
+		source.fragment_shader.unwrap(),
+	);
+
+	// Link the program
+	match (vertex_shader, fragment_shader) {
+		(Ok(vert), Ok(frag)) => link_program(&context, &vert, &frag).ok(),
+		_ => None
+	}
+}
+
+/// Set up front end canvas
+///
+/// Sets up the window, canvas, and returns a valid rendering context for webGL
+/// Shits the bed when it fails, because there's no reason to continue without it
+///
+/// returns - rendering context
+pub fn set_up_canvas() -> WebGlRenderingContext {
+	// Get to the canvas object
+	let window = web_sys::window().unwrap();
+	let document = window.document().unwrap();
+	let canvas = document.get_element_by_id("webGL")
+		.unwrap()
+		.dyn_into::<web_sys::HtmlCanvasElement>()
+		.unwrap();
+
+	// Set canvas to full window size
+	let width = window.inner_width().unwrap().as_f64().unwrap() as u32;
+	let height = window.inner_height().unwrap().as_f64().unwrap() as u32;
+
+	canvas.set_width(width);
+	canvas.set_height(height);
+
+	// Get context
+	canvas.get_context("webgl").unwrap().unwrap()
+		.dyn_into::<WebGlRenderingContext>().unwrap()
+}
+
 
 /// Compiles a GLSL shader
 ///
@@ -73,20 +133,4 @@ pub fn link_program(
 			.get_program_info_log(&program)
 			.unwrap_or_else(|| String::from("Unknown error creating program object")))
 	}
-}
-
-/// Clear the screen to prepare for drawing
-///
-/// * `context` - the rendering context
-pub fn clear(context: &WebGlRenderingContext) {
-	context.clear_color(0.0, 0.0, 0.0, 1.0);
-	context.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
-}
-
-/// Draws the scene to the screen
-///
-/// * `context` - the rendering context
-/// * `num_triangles` - the number of triangles to render
-pub fn draw(context: &WebGlRenderingContext, num_triangles: i32) {
-	context.draw_arrays(WebGlRenderingContext::TRIANGLES, 0, 3 * num_triangles);
 }
