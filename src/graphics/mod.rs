@@ -2,9 +2,7 @@ mod shaders;
 mod gl;
 
 use std::collections::HashMap;
-
 use web_sys::{WebGlRenderingContext, WebGlProgram};
-
 use self::shaders::shader_sources::get_shader_sources;
 
 /// Initialize graphics
