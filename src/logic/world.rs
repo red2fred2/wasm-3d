@@ -9,7 +9,7 @@ impl World {
 	/// Gets all the objects in the world as a vector
 	///
 	/// Returns - the vector containing all the objects in the world
-	pub fn getObjects(&self) -> &Vec<Object> {
+	pub fn get_objects(&self) -> &Vec<Object> {
 		&self.objects
 	}
 
@@ -26,7 +26,7 @@ impl World {
 	///
 	/// * `dt` - the time difference since this function last ran
 	pub fn update(&self, dt: f32) {
-
+		let _ = dt;
 	}
 }
 

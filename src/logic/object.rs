@@ -22,7 +22,7 @@ impl Object {
 		self.shader_name
 	}
 
-	pub fn getVertices(&self) -> Vec<Vertex> {
+	pub fn get_vertices(&self) -> Vec<Vertex> {
 		let mut vertices = Vec::new();
 
 		for i in 0..self.vertices.len()/3 {

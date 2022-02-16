@@ -44,7 +44,7 @@ impl Graphics {
 		gl.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
 
 		// Render object by object
-		let objects = world.getObjects();
+		let objects = world.get_objects();
 		for object in objects {
 			// Get shader to use
 			let shader_name = object.get_shader_name();

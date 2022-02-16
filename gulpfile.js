@@ -50,7 +50,7 @@ exports.clean = cb => {
 }
 
 exports.wasm = cb => {
-	execSync('wasm-pack build --target web', {stdio: 'inherit'})
+	execSync('wasm-pack build --release --target web', {stdio: 'inherit'})
 	execSync('wasm-strip pkg/*.wasm', {stdio: 'inherit'})
 	src('pkg/*.ts').pipe(dest('typescript/wasm'))
 	src('pkg/*.js').pipe(dest('typescript/wasm'))
