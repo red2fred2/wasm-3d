@@ -96,5 +96,9 @@ impl Object {
 		gl.enable_vertex_attrib_array(0);
 
 		gl.draw_elements_with_i32(WebGlRenderingContext::TRIANGLES, self.triangle_indices.len() as i32, WebGlRenderingContext::UNSIGNED_BYTE, 0);
+
+		// Deallocate memory
+		gl.delete_buffer(Some(&index_buffer));
+		gl.delete_buffer(array_buffer.as_ref());
 	}
 }
