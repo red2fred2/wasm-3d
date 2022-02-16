@@ -1,5 +1,6 @@
 use wasm_bindgen::JsCast;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
+
 use super::shaders::ShaderSource;
 
 /// Compiles and links a shader program
@@ -63,7 +64,6 @@ pub fn set_up_canvas() -> WebGlRenderingContext {
 	canvas.get_context("webgl").unwrap().unwrap()
 		.dyn_into::<WebGlRenderingContext>().unwrap()
 }
-
 
 /// Compiles a GLSL shader
 ///
