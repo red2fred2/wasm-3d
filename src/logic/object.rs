@@ -59,14 +59,14 @@ impl Object {
 	/// Render this object
 	///
 	/// * `gl` - the rendering context to use
-	pub fn render(&self, gl: &WebGlRenderingContext, shader: &Option<WebGlProgram>) {
+	pub fn render(&self, gl: &WebGlRenderingContext, shader: Option<&WebGlProgram>) {
 		let vertices_location = self.vertices.as_ptr() as u32 / 4;
 		let memory_buffer = wasm_bindgen::memory()
             .dyn_into::<WebAssembly::Memory>().unwrap()
             .buffer();
 
 		// Set shader
-		gl.use_program(shader.as_ref());
+		gl.use_program(shader);
 
 		// Initialize the array buffer
 		let array_buffer = gl.create_buffer();

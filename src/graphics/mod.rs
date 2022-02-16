@@ -48,7 +48,13 @@ impl Graphics {
 		for object in objects {
 			// Get shader to use
 			let shader_name = object.get_shader_name();
-			let shader = self.shaders.get(shader_name).unwrap();
+			let shader = self.shaders.get(shader_name);
+
+			// Combine nested Options
+			let shader = match shader {
+				Some(Some(program)) => Some(program),
+				_ => None
+			};
 
 			object.render(gl, shader);
 		}
