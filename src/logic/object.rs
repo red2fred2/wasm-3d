@@ -60,10 +60,19 @@ impl Object {
 	///
 	/// * `gl` - the rendering context to use
 	pub fn render(&self, gl: &WebGlRenderingContext, shader: Option<&WebGlProgram>) {
-		let vertices_location = self.vertices.as_ptr() as u32 / 4;
-		let memory_buffer = wasm_bindgen::memory()
-            .dyn_into::<WebAssembly::Memory>().unwrap()
-            .buffer();
+		// Allocate memory
+		let memory = wasm_bindgen::memory()
+		.dyn_into::<WebAssembly::Memory>();
+
+		let memory_buffer = match memory {
+			Ok(mem) => mem.buffer(),
+			_ =>
+			if cfg!(debug_assertions) {
+				panic!("Failed to allocate memory to render an Object");
+			} else {
+				return
+			}
+		};
 
 		// Set shader
 		gl.use_program(shader);
@@ -72,6 +81,7 @@ impl Object {
 		let array_buffer = gl.create_buffer();
 		gl.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, array_buffer.as_ref());
 
+		let vertices_location = self.vertices.as_ptr() as u32 / 4;
 		let vert_array = js_sys::Float32Array::new(&memory_buffer)
             .subarray(vertices_location, vertices_location + self.vertices.len() as u32);
 
