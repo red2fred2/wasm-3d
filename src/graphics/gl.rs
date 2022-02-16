@@ -10,24 +10,29 @@ use super::shaders::ShaderSource;
 /// Returns - the built program
 pub fn build_program(context: &WebGlRenderingContext, source: &ShaderSource) -> Option<WebGlProgram> {
 
-	// Compile the vertex shader
-	let vertex_shader = compile_shader(
-		context,
-		WebGlRenderingContext::VERTEX_SHADER,
-		source.vertex_shader.unwrap()
-	);
+	// Compile the vertex shader if it exists
+	let vertex_shader = match source.vertex_shader {
+		Some(shader) => compile_shader(
+			context,
+			WebGlRenderingContext::VERTEX_SHADER,
+			shader
+		).ok(),
+		_ => None
+	};
 
-
-	// Compile the fragment shader
-	let fragment_shader = compile_shader(
-		context,
-		WebGlRenderingContext::FRAGMENT_SHADER,
-		source.fragment_shader.unwrap(),
-	);
+	// Compile the fragment shader if it exists
+	let fragment_shader = match source.fragment_shader {
+		Some(shader) => compile_shader(
+			context,
+			WebGlRenderingContext::FRAGMENT_SHADER,
+			shader
+		).ok(),
+		_ => None
+	};
 
 	// Link the program
 	match (vertex_shader, fragment_shader) {
-		(Ok(vert), Ok(frag)) => link_program(&context, &vert, &frag).ok(),
+		(Some(vert), Some(frag)) => link_program(&context, &vert, &frag).ok(),
 		_ => None
 	}
 }
