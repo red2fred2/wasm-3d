@@ -60,7 +60,15 @@ impl Object {
 	///
 	/// * `gl` - the rendering context to use
 	pub fn render(&self, gl: &WebGlRenderingContext, shader: Option<&WebGlProgram>) {
-		// Allocate memory
+		// Set shader
+		gl.use_program(shader);
+
+		// Set array buffer
+		let array_buffer = gl.create_buffer();
+		let ab_ref = array_buffer.as_ref();
+		gl.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, ab_ref);
+
+		// Allocate memory for vertex array
 		let memory = wasm_bindgen::memory()
 		.dyn_into::<WebAssembly::Memory>();
 
@@ -74,31 +82,27 @@ impl Object {
 			}
 		};
 
-		// Set shader
-		gl.use_program(shader);
-
-		// Initialize the array buffer
-		let array_buffer = gl.create_buffer();
-		gl.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, array_buffer.as_ref());
-
+		// Set vertex array
 		let vertices_location = self.vertices.as_ptr() as u32 / 4;
 		let vert_array = js_sys::Float32Array::new(&memory_buffer)
             .subarray(vertices_location, vertices_location + self.vertices.len() as u32);
-
 		gl.buffer_data_with_array_buffer_view(WebGlRenderingContext::ARRAY_BUFFER, &vert_array, WebGlRenderingContext::STATIC_DRAW);
 
-		let index_buffer = gl.create_buffer().unwrap();
-		gl.bind_buffer(WebGlRenderingContext::ELEMENT_ARRAY_BUFFER, Some(&index_buffer));
-
+		// Set index buffer
+		let index_buffer = gl.create_buffer();
+		let ib_ref = index_buffer.as_ref();
+		gl.bind_buffer(WebGlRenderingContext::ELEMENT_ARRAY_BUFFER, ib_ref);
 		gl.buffer_data_with_u8_array(WebGlRenderingContext::ELEMENT_ARRAY_BUFFER, &self.triangle_indices[..], WebGlRenderingContext::STATIC_DRAW);
 
+		// Set attrib pointer
 		gl.vertex_attrib_pointer_with_i32(0, 3, WebGlRenderingContext::FLOAT, false, 0, 0);
 		gl.enable_vertex_attrib_array(0);
 
+		// Draw
 		gl.draw_elements_with_i32(WebGlRenderingContext::TRIANGLES, self.triangle_indices.len() as i32, WebGlRenderingContext::UNSIGNED_BYTE, 0);
 
-		// Deallocate memory
-		gl.delete_buffer(Some(&index_buffer));
+		// Deallocate buffers
+		gl.delete_buffer(ib_ref);
 		gl.delete_buffer(array_buffer.as_ref());
 	}
 }
