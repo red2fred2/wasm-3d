@@ -47,8 +47,8 @@ fn load_objects() -> Vec<Object> {
 		 1., -1., 0.
 	];
 	let indices = vec![
-		0, 1, 7,
-		0, 7, 6
+		1, 3, 4,
+		3, 4, 7
 	];
 	objects.push(Object::new("Basic bitch", indices, vertices));
 
@@ -65,7 +65,7 @@ fn load_objects() -> Vec<Object> {
 		 1., -1., 0.
 	];
 	let indices = vec![
-		1, 2, 5
+		1, 2, 7
 	];
 	objects.push(Object::new("Basic bitch", indices, vertices));
 
