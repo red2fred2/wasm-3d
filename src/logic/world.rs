@@ -25,8 +25,8 @@ impl World {
 	/// Update the game world for dt seconds
 	///
 	/// * `dt` - the time difference since this function last ran
-	pub fn update(&self, dt: u64) {
-		todo!();
+	pub fn update(&self, dt: f32) {
+
 	}
 }
 
