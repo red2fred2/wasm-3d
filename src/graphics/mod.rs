@@ -56,7 +56,7 @@ impl Graphics {
 				_ => None
 			};
 
-			object.render(gl, shader);
+			object.render(gl, shader, world.number);
 		}
 	}
 }

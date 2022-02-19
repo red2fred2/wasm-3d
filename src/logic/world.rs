@@ -2,7 +2,8 @@ use super::object::Object;
 
 /// Contains the game world
 pub struct World {
-	objects: Vec<Object>
+	objects: Vec<Object>,
+	pub number: f32
 }
 
 impl World {
@@ -18,34 +19,22 @@ impl World {
 		let objects = load_objects();
 
 		World {
-			objects: objects
+			objects: objects,
+			number: -1.0
 		}
 	}
 
 	/// Update the game world for dt seconds
 	///
 	/// * `dt` - the time difference since this function last ran
-	pub fn update(&self, dt: f32) {
-		let _ = dt;
+	pub fn update(&mut self, dt: f32) {
+		self.number += dt / 5_000.0;
 	}
 }
 
 /// Loads all the objects in this world
 fn load_objects() -> Vec<Object> {
 	let mut objects = Vec::new();
-
-	// centered square
-	// let vertices = vec![
-	// 	-1.,  1., 0.,
-	// 	 0.,  1., 0.,
-	// 	 1.,  1., 0.,
-	// 	-1.,  0., 0.,
-	// 	 0.,  0., 0.,
-	// 	 1.,  0., 0.,
-	// 	-1., -1., 0.,
-	// 	 0., -1., 0.,
-	// 	 1., -1., 0.
-	// ];
 
 	let vertices = vec![
 		-0.5,  0.5,  0.5,
@@ -59,12 +48,12 @@ fn load_objects() -> Vec<Object> {
 	];
 
 	let indices = vec![
-		// Front face
+		// // Front face
 		// 0, 1, 2,
 		// 1, 2, 3,
-		// // Right face
-		// 1, 3, 5,
-		// 3, 5, 7,
+		// Right face
+		1, 3, 5,
+		3, 5, 7,
 		// // Left face
 		// 0, 2, 4,
 		// 2, 4, 6,

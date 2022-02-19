@@ -43,7 +43,7 @@ impl WebApp {
 
 	/// Kicks off world update
 	#[wasm_bindgen]
-	pub fn update(&self, dt: f32) {
+	pub fn update(&mut self, dt: f32) {
 		self.world.update(dt);
 	}
 

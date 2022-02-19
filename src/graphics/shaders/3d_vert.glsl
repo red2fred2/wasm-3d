@@ -8,5 +8,7 @@ uniform mat4 projection;
 
 // Start shader
 void main() {
-	gl_Position = model * position;
+	mat4 mvp_matrix = projection * view * model;
+
+	gl_Position = mvp_matrix * position;
 }

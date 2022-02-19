@@ -1,7 +1,7 @@
 use js_sys::WebAssembly;
-use nalgebra::{Matrix4, Vector3};
+use nalgebra::{Matrix4, Vector3, Point3};
 use wasm_bindgen::JsCast;
-use web_sys::{WebGlRenderingContext, WebGlProgram};
+use web_sys::{WebGlRenderingContext, WebGlProgram, HtmlCanvasElement};
 
 use super::vertex::Vertex;
 
@@ -64,7 +64,7 @@ impl Object {
 	///
 	/// If this is None the render just does nothing, because there would be
 	/// no point.
-	pub fn render(&self, gl: &WebGlRenderingContext, shader_option: Option<&WebGlProgram>) {
+	pub fn render(&self, gl: &WebGlRenderingContext, shader_option: Option<&WebGlProgram>, number: f32) {
 		// Check that the shader exists, if not just don't render
 		if shader_option == None {
 			return
@@ -83,13 +83,29 @@ impl Object {
 
 		// Model matrix
 		let translation: Matrix4<f32> = Matrix4::new_translation(&Vector3::new(0.0, 0.0, 0.0));
-		let rotation: Matrix4<f32> = Matrix4::new_rotation(Vector3::new(0.3, 0.8, 0.0));
+		let rotation: Matrix4<f32> = Matrix4::new_rotation(Vector3::new(0.0, 0.0, 0.0));
 		let scale: Matrix4<f32> = Matrix4::new_scaling(1.0);
 
-		let model = rotation * translation * scale;
+		let model = translation * rotation * scale;
 		gl.uniform_matrix4fv_with_f32_array(model_uniform.as_ref(), false, &model.as_slice());
 
+		// View matrix
+		let view: Matrix4<f32> = Matrix4::look_at_rh(&Point3::new((number*2.0*3.14).cos(), (number*2.0*3.14).sin(), 1.0), &Point3::new(0.0, 0.0, 0.0), &Vector3::new(0.0, 1.0, 0.0));
+		gl.uniform_matrix4fv_with_f32_array(view_uniform.as_ref(), false, &view.as_slice());
+
+		// Projection matrix
+		let canvas: HtmlCanvasElement = gl.canvas().unwrap().dyn_into::<HtmlCanvasElement>().unwrap();
+		let width = canvas.client_width() as f32;
+		let height = canvas.client_height() as f32;
+		let aspect_ratio = width / height;
+		let fov_x_degrees_16x9 = 90.0;
+		let fov_y_radians = fov_x_degrees_16x9 * 9.0 / 16.0 * 3.14159 / 180.0;
+
+		let projection: Matrix4<f32> = Matrix4::new_perspective(aspect_ratio, fov_y_radians, 0.0, 100.0);
+		gl.uniform_matrix4fv_with_f32_array(projection_uniform.as_ref(), false, &projection.as_slice());
+
 		// Set array buffer
+		// Avoid creating a new buffer for every draw in the future
 		let array_buffer = gl.create_buffer();
 		let ab_ref = array_buffer.as_ref();
 		gl.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, ab_ref);
