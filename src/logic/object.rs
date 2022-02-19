@@ -1,4 +1,5 @@
 use js_sys::WebAssembly;
+use nalgebra::{Matrix4, Vector3};
 use wasm_bindgen::JsCast;
 use web_sys::{WebGlRenderingContext, WebGlProgram};
 
@@ -59,9 +60,34 @@ impl Object {
 	/// Render this object
 	///
 	/// * `gl` - the rendering context to use
-	pub fn render(&self, gl: &WebGlRenderingContext, shader: Option<&WebGlProgram>) {
+	/// * `shader_option` - an option to a reference to a compile shader program
+	///
+	/// If this is None the render just does nothing, because there would be
+	/// no point.
+	pub fn render(&self, gl: &WebGlRenderingContext, shader_option: Option<&WebGlProgram>) {
+		// Check that the shader exists, if not just don't render
+		if shader_option == None {
+			return
+		}
+		let shader = shader_option.unwrap();
+
 		// Set shader
-		gl.use_program(shader);
+		gl.use_program(shader_option);
+
+		// Get shader uniform locations so values can be passed in
+		let model_uniform = gl.get_uniform_location(&shader, "model");
+		let view_uniform = gl.get_uniform_location(&shader, "view");
+		let projection_uniform = gl.get_uniform_location(&shader, "projection");
+
+		// Pass values into uniforms
+
+		// Model matrix
+		let translation: Matrix4<f32> = Matrix4::new_translation(&Vector3::new(0.0, 0.0, 0.0));
+		let rotation: Matrix4<f32> = Matrix4::new_rotation(Vector3::new(0.3, 0.8, 0.0));
+		let scale: Matrix4<f32> = Matrix4::new_scaling(1.0);
+
+		let model = rotation * translation * scale;
+		gl.uniform_matrix4fv_with_f32_array(model_uniform.as_ref(), false, &model.as_slice());
 
 		// Set array buffer
 		let array_buffer = gl.create_buffer();
