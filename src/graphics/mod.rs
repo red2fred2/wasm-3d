@@ -91,9 +91,10 @@ impl Graphics {
 		// Move camera
 		let timer = world.get_time_elapsed();
 		let cam_time = timer / 5_000.0;
-		let cam_x = 3.0*(cam_time * 2.0 * 3.14).cos();
-		let cam_y = 3.0*(cam_time * 2.0 * 3.14).sin();
-		let cam_pos = Point3::new(cam_x, cam_y, 4.0);
+		let cam_x = 3.0 * (cam_time * 2.0 * 3.14).cos();
+		let cam_y = 3.0 * (cam_time * 2.0 * 3.14).sin();
+		let cam_z = 4.0 * cam_time.sin();
+		let cam_pos = Point3::new(cam_x, cam_y, cam_z);
 		self.camera.teleport_keep_target(cam_pos);
 
 		// Render object by object
