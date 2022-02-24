@@ -37,7 +37,7 @@ impl WebApp {
 
 	/// Kicks off rendering
 	#[wasm_bindgen]
-	pub fn render(&self) {
+	pub fn render(&mut self) {
 		self.graphics.render(&self.world);
 	}
 
