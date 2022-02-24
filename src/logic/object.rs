@@ -3,54 +3,69 @@ use nalgebra::{Matrix4, Vector3};
 use wasm_bindgen::JsCast;
 use web_sys::{WebGlRenderingContext, WebGlProgram, HtmlCanvasElement};
 
-use super::vertex::Vertex;
-
 /// Something that can be rendered to the screen
 pub struct Object {
+	/// Model matrix for rendering. A combination of translation, rotation, scale
+	model_matrix: Matrix4<f32>,
+	/// The position of this object's origin in world space
+	position: Vector3<f32>,
+	/// The rotation of this object in world space
+	rotation: Vector3<f32>,
+	/// The rotation matrix for rendering
+	rotation_matrix: Matrix4<f32>,
+	/// The scale of this object compared to world space
+	scale: f32,
+	/// The scale matrix for rendering
+	scale_matrix: Matrix4<f32>,
 	/// The name of the shader to use on this object
 	shader_name: &'static str,
+	/// Translation matrix for rendering
+	translation_matrix: Matrix4<f32>,
 	/// Contains an index array for rendering
 	triangle_indices: Vec<u8>,
 	/// A vector of vertices optimized for rendering vs physics
-	///
 	/// Stored like [x1, y2, z1, x2, y2, z2]
 	vertices: Vec<f32>
 }
-
+#[allow(dead_code)]
 impl Object {
 	/// Get the name of the shader to use when rendering this object
 	pub fn get_shader_name(&self) -> &'static str {
 		self.shader_name
 	}
 
-	pub fn get_vertices(&self) -> Vec<Vertex> {
-		let mut vertices = Vec::new();
-
-		for i in 0..self.vertices.len()/3 {
-
-		vertices.push(Vertex {
-			x: self.vertices[3*i],
-			y: self.vertices[3*i+1],
-			z: self.vertices[3*i+2]
-		});
-		}
-
-		vertices
-	}
-
 	/// Creates a new Object
 	///
+	/// * `position` - The position of this object's origin in world space
+	/// * `rotation` - The rotation of this object in world space
+	/// * `scale` - The relative scale of this object in world space
 	/// * `shader_name` - The name of the shader to use on this object
 	/// * `triangle_indices` - Contains an index array for rendering
 	/// * `vertices` - A vector of vertices optimized for rendering vs physics
-	///
 	/// Stored like [x1, y2, z1, x2, y2, z2]
 	pub fn new(
+		position: Vector3<f32>,
+		rotation: Vector3<f32>,
+		scale: f32,
 		shader_name: &'static str,
 		triangle_indices: Vec<u8>,
 		vertices: Vec<f32>
 	) -> Object {
+		// Calculate matrices for rendering
+		let translation_matrix = Matrix4::new_translation(&position);
+		let rotation_matrix = Matrix4::new_rotation(rotation);
+		let scale_matrix = Matrix4::new_scaling(scale);
+		let model_matrix = translation_matrix * rotation_matrix * scale_matrix;
+
+		// Return Object
 		Object {
+			model_matrix: model_matrix,
+			position: position,
+			translation_matrix: translation_matrix,
+			rotation: rotation,
+			rotation_matrix: rotation_matrix,
+			scale: scale,
+			scale_matrix: scale_matrix,
 			shader_name: shader_name,
 			triangle_indices: triangle_indices,
 			vertices: vertices
@@ -88,12 +103,7 @@ impl Object {
 		// Pass values into uniforms
 
 		// Model matrix
-		let translation: Matrix4<f32> = Matrix4::new_translation(&Vector3::new(0.0, 0.0, 0.0));
-		let rotation: Matrix4<f32> = Matrix4::new_rotation(Vector3::new(0.0, 0.0, 0.0));
-		let scale: Matrix4<f32> = Matrix4::new_scaling(1.0);
-
-		let model = translation * rotation * scale;
-		gl.uniform_matrix4fv_with_f32_array(model_uniform.as_ref(), false, &model.as_slice());
+		gl.uniform_matrix4fv_with_f32_array(model_uniform.as_ref(), false, self.model_matrix.as_slice());
 
 		// View matrix
 		gl.uniform_matrix4fv_with_f32_array(view_uniform.as_ref(), false, view_matrix);

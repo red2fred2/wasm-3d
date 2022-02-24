@@ -1,3 +1,5 @@
+use nalgebra::Vector3;
+
 use super::object::Object;
 
 /// Contains the game world
@@ -73,7 +75,11 @@ fn load_objects() -> Vec<Object> {
 		3, 6, 7
 
 	];
-	objects.push(Object::new("3d orange", indices, vertices));
+
+	let position = Vector3::new(0.0, 0.0, 0.0);
+	let rotation = Vector3::new(0.0, 0.0, 0.0);
+	let scale = 1.0;
+	objects.push(Object::new(position, rotation, scale, "3d orange", indices, vertices));
 
 	objects
 }
