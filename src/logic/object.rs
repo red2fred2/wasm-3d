@@ -1,10 +1,14 @@
-use js_sys::WebAssembly;
+use js_sys::{WebAssembly, Float32Array};
 use nalgebra::{Matrix4, Vector3};
-use wasm_bindgen::JsCast;
-use web_sys::{WebGlRenderingContext, WebGlProgram};
+use wasm_bindgen::{JsCast, JsValue};
+use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer};
 
 /// Something that can be rendered to the screen
 pub struct Object {
+	/// The JS memory allocated for this object
+	js_memory: JsValue,
+	/// The JS buffer contained the vertices for rendering
+	js_vertex_buffer: Float32Array,
 	/// Model matrix for rendering. A combination of translation, rotation, scale
 	model_matrix: Matrix4<f32>,
 	/// The position of this object's origin in world space
@@ -57,18 +61,31 @@ impl Object {
 		let scale_matrix = Matrix4::new_scaling(scale);
 		let model_matrix = translation_matrix * rotation_matrix * scale_matrix;
 
+		// Allocate memory for vertex array
+		let memory = wasm_bindgen::memory()
+		.dyn_into::<WebAssembly::Memory>().expect("Failed to allocate memory to render an Object");
+
+		let js_memory = memory.buffer();
+
+		// Set vertex array
+		let vertices_location = vertices.as_ptr() as u32 / 4;
+		let js_vertex_buffer = js_sys::Float32Array::new(&js_memory)
+            .subarray(vertices_location, vertices_location + vertices.len() as u32);
+
 		// Return Object
 		Object {
-			model_matrix: model_matrix,
-			position: position,
-			translation_matrix: translation_matrix,
-			rotation: rotation,
-			rotation_matrix: rotation_matrix,
-			scale: scale,
-			scale_matrix: scale_matrix,
-			shader_name: shader_name,
-			triangle_indices: triangle_indices,
-			vertices: vertices
+			js_memory,
+			js_vertex_buffer,
+			model_matrix,
+			position,
+			translation_matrix,
+			rotation,
+			rotation_matrix,
+			scale,
+			scale_matrix,
+			shader_name,
+			triangle_indices,
+			vertices
 		}
 	}
 
@@ -106,36 +123,10 @@ impl Object {
 		let projection_uniform = gl.get_uniform_location(&shader, "projection");
 		gl.uniform_matrix4fv_with_f32_array(projection_uniform.as_ref(), false, projection_matrix);
 
-		// Set array buffer
-		// Avoid creating a new buffer for every draw in the future
-		let array_buffer = gl.create_buffer();
-		let ab_ref = array_buffer.as_ref();
-		gl.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, ab_ref);
-
-		// Allocate memory for vertex array
-		let memory = wasm_bindgen::memory()
-		.dyn_into::<WebAssembly::Memory>();
-
-		let memory_buffer = match memory {
-			Ok(mem) => mem.buffer(),
-			_ =>
-			if cfg!(debug_assertions) {
-				panic!("Failed to allocate memory to render an Object");
-			} else {
-				return
-			}
-		};
-
-		// Set vertex array
-		let vertices_location = self.vertices.as_ptr() as u32 / 4;
-		let vert_array = js_sys::Float32Array::new(&memory_buffer)
-            .subarray(vertices_location, vertices_location + self.vertices.len() as u32);
-		gl.buffer_data_with_array_buffer_view(WebGlRenderingContext::ARRAY_BUFFER, &vert_array, WebGlRenderingContext::STATIC_DRAW);
+		// Set vertex buffer
+		gl.buffer_data_with_array_buffer_view(WebGlRenderingContext::ARRAY_BUFFER, &self.js_vertex_buffer, WebGlRenderingContext::STATIC_DRAW);
 
 		// Set index buffer
-		let index_buffer = gl.create_buffer();
-		let ib_ref = index_buffer.as_ref();
-		gl.bind_buffer(WebGlRenderingContext::ELEMENT_ARRAY_BUFFER, ib_ref);
 		gl.buffer_data_with_u8_array(WebGlRenderingContext::ELEMENT_ARRAY_BUFFER, &self.triangle_indices[..], WebGlRenderingContext::STATIC_DRAW);
 
 		// Set attrib pointer
@@ -144,9 +135,5 @@ impl Object {
 
 		// Draw
 		gl.draw_elements_with_i32(WebGlRenderingContext::TRIANGLES, self.triangle_indices.len() as i32, WebGlRenderingContext::UNSIGNED_BYTE, 0);
-
-		// Deallocate buffers
-		gl.delete_buffer(ib_ref);
-		gl.delete_buffer(array_buffer.as_ref());
 	}
 }

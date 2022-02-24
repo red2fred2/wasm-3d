@@ -6,16 +6,20 @@ use std::collections::HashMap;
 
 use nalgebra::{Matrix4, Point3};
 use wasm_bindgen::JsCast;
-use web_sys::{WebGlRenderingContext, WebGlProgram, HtmlCanvasElement};
+use web_sys::{WebGlRenderingContext, WebGlProgram, HtmlCanvasElement, WebGlBuffer};
 
 use crate::logic::world::World;
 use self::{shaders::shader_sources::get_shader_sources, camera::Camera};
 
 pub struct Graphics {
+	// The rendering buffer
+	array_buffer: Option<WebGlBuffer>,
 	/// A camera to be rendered from
 	camera: Camera,
 	/// The webgl context to render to
 	context: WebGlRenderingContext,
+	/// The index buffer
+	index_buffer: Option<WebGlBuffer>,
 	/// The projection matrix to apply to renders
 	projection_matrix: Matrix4<f32>,
 	/// The shaders that have been compiled
@@ -57,8 +61,22 @@ impl Graphics {
 
 		let projection_matrix: Matrix4<f32> = Matrix4::new_perspective(aspect_ratio, fov_y_radians, 0.0, 100.0);
 
+		// Create and bind array buffer for webGL
+		let array_buffer = context.create_buffer();
+		context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, array_buffer.as_ref());
+
+		// Create index buffer for webGL
+		let index_buffer = context.create_buffer();
+
 		// Return newly created Graphics object
-		Graphics{context: context, shaders: shaders, camera: camera, projection_matrix: projection_matrix}
+		Graphics {
+			array_buffer,
+			context,
+			index_buffer,
+			shaders,
+			camera,
+			projection_matrix
+		}
 	}
 
 	/// Renders a frame to the screen
@@ -91,7 +109,17 @@ impl Graphics {
 				_ => None
 			};
 
+			gl.bind_buffer(WebGlRenderingContext::ELEMENT_ARRAY_BUFFER, self.index_buffer.as_ref());
 			object.render(gl, shader, &self.camera.get_view_matrix().as_slice(), self.projection_matrix.as_slice());
 		}
+	}
+}
+
+impl Drop for Graphics {
+	/// Destructor
+	fn drop(&mut self) {
+		// Free buffers from webGL memory
+		self.context.delete_buffer(self.array_buffer.as_ref());
+		self.context.delete_buffer(self.index_buffer.as_ref());
 	}
 }
