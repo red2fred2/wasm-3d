@@ -1,14 +1,17 @@
+mod camera;
 mod gl;
 mod shaders;
 
 use std::collections::HashMap;
 
+use nalgebra::Point3;
 use web_sys::{WebGlRenderingContext, WebGlProgram};
 
 use crate::logic::world::World;
-use self::shaders::shader_sources::get_shader_sources;
+use self::{shaders::shader_sources::get_shader_sources, camera::Camera};
 
 pub struct Graphics {
+	camera: Camera,
 	context: WebGlRenderingContext,
 	shaders: HashMap<&'static str, Option<WebGlProgram>>
 }
@@ -30,18 +33,31 @@ impl Graphics {
 			shaders.insert(name as &str, compiled_shader);
 		}
 
+		// Create generic camera
+		let origin = Point3::new(0.0, 0.0, 0.0);
+		let starting_location = Point3::new(1.0, 0.0, 4.0);
+		let camera = Camera::new_targeted(starting_location, origin, 0.0);
+
 		// Return newly created Graphics object
-		Graphics {context: context, shaders: shaders}
+		Graphics{context: context, shaders: shaders, camera: camera}
 	}
 
 	/// Renders a frame to the screen
-	pub fn render(&self, world: &World) {
+	pub fn render(&mut self, world: &World) {
 		// Set gl to the rendering context for easier use
 		let gl = &self.context;
 
 		// Clear the screen for rendering
 		gl.clear_color(0.0, 0.0, 0.0, 1.0);
 		gl.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
+
+		// Move camera
+		let timer = world.get_time_elapsed();
+		let cam_time = timer / 5_000.0;
+		let cam_x = 3.0*(cam_time * 2.0 * 3.14).cos();
+		let cam_y = 3.0*(cam_time * 2.0 * 3.14).sin();
+		let cam_pos = Point3::new(cam_x, cam_y, 4.0);
+		self.camera.teleport_keep_target(cam_pos);
 
 		// Render object by object
 		let objects = world.get_objects();
@@ -56,7 +72,7 @@ impl Graphics {
 				_ => None
 			};
 
-			object.render(gl, shader, world.number);
+			object.render(gl, shader, &self.camera.get_view_matrix().as_slice());
 		}
 	}
 }

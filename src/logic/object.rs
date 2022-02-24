@@ -1,5 +1,5 @@
 use js_sys::WebAssembly;
-use nalgebra::{Matrix4, Vector3, Point3};
+use nalgebra::{Matrix4, Vector3};
 use wasm_bindgen::JsCast;
 use web_sys::{WebGlRenderingContext, WebGlProgram, HtmlCanvasElement};
 
@@ -59,12 +59,18 @@ impl Object {
 
 	/// Render this object
 	///
-	/// * `gl` - the rendering context to use
-	/// * `shader_option` - an option to a reference to a compile shader program
-	///
 	/// If this is None the render just does nothing, because there would be
 	/// no point.
-	pub fn render(&self, gl: &WebGlRenderingContext, shader_option: Option<&WebGlProgram>, number: f32) {
+	///
+	/// * `gl` - the rendering context to use
+	/// * `shader_option` - an option to a reference to a compile shader program
+	/// * `view_matrix` - the view matrix to render with, usually from a Camera
+	pub fn render(
+		&self,
+		gl: &WebGlRenderingContext,
+		shader_option: Option<&WebGlProgram>,
+		view_matrix: &[f32]
+	) {
 		// Check that the shader exists, if not just don't render
 		if shader_option == None {
 			return
@@ -90,8 +96,7 @@ impl Object {
 		gl.uniform_matrix4fv_with_f32_array(model_uniform.as_ref(), false, &model.as_slice());
 
 		// View matrix
-		let view: Matrix4<f32> = Matrix4::look_at_rh(&Point3::new((number*2.0*3.14).cos(), (number*2.0*3.14).sin(), 1.0), &Point3::new(0.0, 0.0, 0.0), &Vector3::new(0.0, 1.0, 0.0));
-		gl.uniform_matrix4fv_with_f32_array(view_uniform.as_ref(), false, &view.as_slice());
+		gl.uniform_matrix4fv_with_f32_array(view_uniform.as_ref(), false, view_matrix);
 
 		// Projection matrix
 		let canvas: HtmlCanvasElement = gl.canvas().unwrap().dyn_into::<HtmlCanvasElement>().unwrap();

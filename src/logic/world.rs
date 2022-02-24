@@ -3,7 +3,7 @@ use super::object::Object;
 /// Contains the game world
 pub struct World {
 	objects: Vec<Object>,
-	pub number: f32
+	time_elapsed: f32
 }
 
 impl World {
@@ -14,13 +14,18 @@ impl World {
 		&self.objects
 	}
 
+	/// Gets the time (in seconds) since the program started
+	pub fn get_time_elapsed(&self) -> f32 {
+		self.time_elapsed
+	}
+
 	/// Initialize the game world
 	pub fn init() -> World {
 		let objects = load_objects();
 
 		World {
 			objects: objects,
-			number: -1.0
+			time_elapsed: 0.0
 		}
 	}
 
@@ -28,7 +33,7 @@ impl World {
 	///
 	/// * `dt` - the time difference since this function last ran
 	pub fn update(&mut self, dt: f32) {
-		self.number += dt / 5_000.0;
+		self.time_elapsed += dt;
 	}
 }
 
