@@ -38,33 +38,6 @@ pub fn build_program(context: &WebGlRenderingContext, source: &ShaderSource) -> 
 	}
 }
 
-/// Set up front end canvas
-///
-/// Sets up the window, canvas, and returns a valid rendering context for webGL
-/// Shits the bed when it fails, because there's no reason to continue without it
-///
-/// returns - rendering context
-pub fn set_up_canvas() -> WebGlRenderingContext {
-	// Get to the canvas object
-	let window = web_sys::window().unwrap();
-	let document = window.document().unwrap();
-	let canvas = document.get_element_by_id("webGL")
-		.unwrap()
-		.dyn_into::<web_sys::HtmlCanvasElement>()
-		.unwrap();
-
-	// Set canvas to full window size
-	let width = window.inner_width().unwrap().as_f64().unwrap() as u32;
-	let height = window.inner_height().unwrap().as_f64().unwrap() as u32;
-
-	canvas.set_width(width);
-	canvas.set_height(height);
-
-	// Get context
-	canvas.get_context("webgl").unwrap().unwrap()
-		.dyn_into::<WebGlRenderingContext>().unwrap()
-}
-
 /// Compiles a GLSL shader
 ///
 /// * `context` - the GL context this is rendering in
@@ -138,4 +111,31 @@ pub fn link_program(
 			.get_program_info_log(&program)
 			.unwrap_or_else(|| String::from("Unknown error creating program object")))
 	}
+}
+
+/// Set up front end canvas
+///
+/// Sets up the window, canvas, and returns a valid rendering context for webGL
+/// Shits the bed when it fails, because there's no reason to continue without it
+///
+/// returns - rendering context
+pub fn set_up_canvas() -> WebGlRenderingContext {
+	// Get to the canvas object
+	let window = web_sys::window().unwrap();
+	let document = window.document().unwrap();
+	let canvas = document.get_element_by_id("webGL")
+		.unwrap()
+		.dyn_into::<web_sys::HtmlCanvasElement>()
+		.unwrap();
+
+	// Set canvas to full window size
+	let width = window.inner_width().unwrap().as_f64().unwrap() as u32;
+	let height = window.inner_height().unwrap().as_f64().unwrap() as u32;
+
+	canvas.set_width(width);
+	canvas.set_height(height);
+
+	// Get context
+	canvas.get_context("webgl").unwrap().unwrap()
+		.dyn_into::<WebGlRenderingContext>().unwrap()
 }
