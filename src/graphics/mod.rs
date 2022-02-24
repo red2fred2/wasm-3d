@@ -4,21 +4,26 @@ mod shaders;
 
 use std::collections::HashMap;
 
-use nalgebra::Point3;
-use web_sys::{WebGlRenderingContext, WebGlProgram};
+use nalgebra::{Matrix4, Point3};
+use wasm_bindgen::JsCast;
+use web_sys::{WebGlRenderingContext, WebGlProgram, HtmlCanvasElement};
 
 use crate::logic::world::World;
 use self::{shaders::shader_sources::get_shader_sources, camera::Camera};
 
 pub struct Graphics {
+	/// A camera to be rendered from
 	camera: Camera,
+	/// The webgl context to render to
 	context: WebGlRenderingContext,
+	/// The projection matrix to apply to renders
+	projection_matrix: Matrix4<f32>,
+	/// The shaders that have been compiled
 	shaders: HashMap<&'static str, Option<WebGlProgram>>
 }
 
 /// Holds all information regarding the graphics of the application
 impl Graphics {
-
 	/// Initialize graphics
 	pub fn init() -> Graphics {
 		// Set up the front end
@@ -38,8 +43,22 @@ impl Graphics {
 		let starting_location = Point3::new(1.0, 0.0, 4.0);
 		let camera = Camera::new_targeted(starting_location, origin, 0.0);
 
+		// Create projection matrix
+		// Find information about the screen being rendered to
+		let canvas: HtmlCanvasElement = context.canvas().unwrap().dyn_into::<HtmlCanvasElement>().unwrap();
+		let width = canvas.client_width() as f32;
+		let height = canvas.client_height() as f32;
+		let aspect_ratio = width / height;
+
+		// If the screen were 16:9, then the x field of view should be 90 degrees
+		let fov_x_degrees_16x9 = 90.0;
+		// Convert to y FOV in radians without worrying about the aspect ratio
+		let fov_y_radians = fov_x_degrees_16x9 * 9.0 / 16.0 * 3.14159 / 180.0;
+
+		let projection_matrix: Matrix4<f32> = Matrix4::new_perspective(aspect_ratio, fov_y_radians, 0.0, 100.0);
+
 		// Return newly created Graphics object
-		Graphics{context: context, shaders: shaders, camera: camera}
+		Graphics{context: context, shaders: shaders, camera: camera, projection_matrix: projection_matrix}
 	}
 
 	/// Renders a frame to the screen
@@ -72,7 +91,7 @@ impl Graphics {
 				_ => None
 			};
 
-			object.render(gl, shader, &self.camera.get_view_matrix().as_slice());
+			object.render(gl, shader, &self.camera.get_view_matrix().as_slice(), self.projection_matrix.as_slice());
 		}
 	}
 }

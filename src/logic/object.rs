@@ -1,7 +1,7 @@
 use js_sys::WebAssembly;
 use nalgebra::{Matrix4, Vector3};
 use wasm_bindgen::JsCast;
-use web_sys::{WebGlRenderingContext, WebGlProgram, HtmlCanvasElement};
+use web_sys::{WebGlRenderingContext, WebGlProgram};
 
 /// Something that can be rendered to the screen
 pub struct Object {
@@ -84,7 +84,8 @@ impl Object {
 		&self,
 		gl: &WebGlRenderingContext,
 		shader_option: Option<&WebGlProgram>,
-		view_matrix: &[f32]
+		view_matrix: &[f32],
+		projection_matrix: &[f32]
 	) {
 		// Check that the shader exists, if not just don't render
 		if shader_option == None {
@@ -95,29 +96,15 @@ impl Object {
 		// Set shader
 		gl.use_program(shader_option);
 
-		// Get shader uniform locations so values can be passed in
+		// Set MVP uniform values
 		let model_uniform = gl.get_uniform_location(&shader, "model");
-		let view_uniform = gl.get_uniform_location(&shader, "view");
-		let projection_uniform = gl.get_uniform_location(&shader, "projection");
-
-		// Pass values into uniforms
-
-		// Model matrix
 		gl.uniform_matrix4fv_with_f32_array(model_uniform.as_ref(), false, self.model_matrix.as_slice());
 
-		// View matrix
+		let view_uniform = gl.get_uniform_location(&shader, "view");
 		gl.uniform_matrix4fv_with_f32_array(view_uniform.as_ref(), false, view_matrix);
 
-		// Projection matrix
-		let canvas: HtmlCanvasElement = gl.canvas().unwrap().dyn_into::<HtmlCanvasElement>().unwrap();
-		let width = canvas.client_width() as f32;
-		let height = canvas.client_height() as f32;
-		let aspect_ratio = width / height;
-		let fov_x_degrees_16x9 = 90.0;
-		let fov_y_radians = fov_x_degrees_16x9 * 9.0 / 16.0 * 3.14159 / 180.0;
-
-		let projection: Matrix4<f32> = Matrix4::new_perspective(aspect_ratio, fov_y_radians, 0.0, 100.0);
-		gl.uniform_matrix4fv_with_f32_array(projection_uniform.as_ref(), false, &projection.as_slice());
+		let projection_uniform = gl.get_uniform_location(&shader, "projection");
+		gl.uniform_matrix4fv_with_f32_array(projection_uniform.as_ref(), false, projection_matrix);
 
 		// Set array buffer
 		// Avoid creating a new buffer for every draw in the future
