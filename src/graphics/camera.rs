@@ -130,7 +130,7 @@ impl Camera {
 	/// * `yaw` - the value to yaw by
 	/// * `roll` - value to roll
 	pub fn turn(&mut self, pitch: f32, yaw: f32, roll: f32) {
-		(_,_,_) = (pitch, yaw, roll);
+		let (_,_,_) = (pitch, yaw, roll);
 		todo!();
 	}
 }
