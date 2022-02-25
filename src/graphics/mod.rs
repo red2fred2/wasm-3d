@@ -1,15 +1,15 @@
 mod camera;
-mod gl;
-mod shaders;
+pub mod gl;
+pub mod shaders;
 
 use std::collections::HashMap;
 
 use nalgebra::{Matrix4, Point3};
 use wasm_bindgen::JsCast;
-use web_sys::{WebGlRenderingContext, WebGlProgram, HtmlCanvasElement, WebGlBuffer};
+use web_sys::{WebGlRenderingContext, HtmlCanvasElement, WebGlBuffer};
 
 use crate::logic::world::World;
-use self::{shaders::shader_sources::get_shader_sources, camera::Camera};
+use self::{shaders::{shader_sources::get_shader_sources, CompiledShader, UniformType, Uniform}, camera::Camera};
 
 pub struct Graphics {
 	// The rendering buffer
@@ -23,24 +23,84 @@ pub struct Graphics {
 	/// The projection matrix to apply to renders
 	projection_matrix: Matrix4<f32>,
 	/// The shaders that have been compiled
-	shaders: HashMap<&'static str, Option<WebGlProgram>>
+	shaders: HashMap<&'static str, CompiledShader>
 }
 
 /// Holds all information regarding the graphics of the application
 impl Graphics {
+	/// Compiles shaders and returns them as a hash map
+///
+/// * `context` - the webGL rendering context these are being compiled in
+pub fn compile_shaders(&mut self) {
+	// Compile shaders
+	let shader_source = get_shader_sources();
+	let mut shaders = HashMap::new();
+
+	// Compile each shader and insert to map
+	for (name, source) in shader_source.iter() {
+		// Compile program
+		let compiled_program = gl::build_program(&self.context, source);
+
+		// Check if it compiled correctly
+		match &compiled_program {
+			Some(program) => {
+				// If success
+				// Find uniform locations
+				// Start with MVP uniforms
+				let model_location = self.context.get_uniform_location(&program, "model");
+				let model_uniform = Uniform {
+					location: model_location,
+					u_type: UniformType::Mat4
+				};
+				let view_location = self.context.get_uniform_location(&program, "view");
+				let view_uniform = Uniform {
+					location: view_location,
+					u_type: UniformType::Mat4
+				};
+				let projection_location = self.context.get_uniform_location(&program, "projection");
+				let projection_uniform = Uniform {
+					location: projection_location,
+					u_type: UniformType::Mat4
+				};
+
+				// Find other uniforms
+				let mut uniforms = HashMap::new();
+
+				// Run through each uniform name
+				// there should be a matching type in uniform_types
+				for i in 0..source.uniform_names.len() {
+					let uniform_name = source.uniform_names[i];
+					let u_type = source.uniform_types[i];
+
+					let location = self.context.get_uniform_location(&program, uniform_name);
+
+					let uniform = Uniform {location, u_type};
+
+					uniforms.insert(uniform_name, uniform);
+				}
+
+				// Put it all together
+				let compiled_shader = CompiledShader {
+					model_uniform: Some(model_uniform),
+					program: compiled_program,
+					projection_uniform: Some(projection_uniform),
+					uniforms,
+					view_uniform: Some(view_uniform)
+				};
+				shaders.insert(name as &str, compiled_shader);
+			},
+			_ => ()
+		}
+	}
+
+	self.shaders = shaders;
+}
+
+
 	/// Initialize graphics
 	pub fn init() -> Graphics {
 		// Set up the front end
 		let context = gl::set_up_canvas();
-
-		// Compile shaders
-		let shader_source = get_shader_sources();
-		let mut shaders = HashMap::new();
-
-		for (name, source) in shader_source.iter() {
-			let compiled_shader = gl::build_program(&context, source);
-			shaders.insert(name as &str, compiled_shader);
-		}
 
 		// Create generic camera
 		let origin = Point3::new(0.0, 0.0, 0.0);
@@ -67,6 +127,8 @@ impl Graphics {
 
 		// Create index buffer for webGL
 		let index_buffer = context.create_buffer();
+
+		let shaders = HashMap::new();
 
 		// Return newly created Graphics object
 		Graphics {
@@ -104,14 +166,31 @@ impl Graphics {
 			let shader_name = object.get_shader_name();
 			let shader = self.shaders.get(shader_name);
 
-			// Combine nested Options
-			let shader = match shader {
-				Some(Some(program)) => Some(program),
-				_ => None
-			};
+			// Only render if it can find the shader
+			match shader {
+				Some(shader) => {
+					// If it found the shader
 
-			gl.bind_buffer(WebGlRenderingContext::ELEMENT_ARRAY_BUFFER, self.index_buffer.as_ref());
-			object.render(gl, shader, &self.camera.get_view_matrix().as_slice(), self.projection_matrix.as_slice());
+					// Prepare to render
+					gl.bind_buffer(WebGlRenderingContext::ELEMENT_ARRAY_BUFFER, self.index_buffer.as_ref());
+
+					// Set shader
+					// Set shader
+					gl.use_program(shader.program.as_ref());
+
+					// Set view matrix
+					let view_matrix = self.camera.get_view_matrix().as_slice();
+					gl::set_mat4_uniform(&gl, &shader.view_uniform, view_matrix);
+
+					// Set projection matrix
+					let projection_matrix = self.projection_matrix.as_slice();
+					gl::set_mat4_uniform(&gl, &shader.projection_uniform, projection_matrix);
+
+					// Render
+					object.render(gl, shader);
+				},
+				_ => ()
+			}
 		}
 	}
 }

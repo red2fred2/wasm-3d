@@ -8,13 +8,17 @@ pub fn get_shader_sources() -> HashMap<&'static str, ShaderSource<'static>> {
 	// Basic bitch shader
 	sources.insert("Basic bitch", ShaderSource {
 		vertex_shader: Some(include_str!("here_vert.glsl-min")),
-		fragment_shader: Some(include_str!("orange_frag.glsl-min"))
+		fragment_shader: Some(include_str!("orange_frag.glsl-min")),
+		uniform_names: vec![],
+		uniform_types: vec![]
 	});
 
 	// 3d orange shader
 	sources.insert("3d orange", ShaderSource {
 		vertex_shader: Some(include_str!("3d_vert.glsl-min")),
-		fragment_shader: Some(include_str!("orange_frag.glsl-min"))
+		fragment_shader: Some(include_str!("orange_frag.glsl-min")),
+		uniform_names: vec![],
+		uniform_types: vec![]
 	});
 
 	sources

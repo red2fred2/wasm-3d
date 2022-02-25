@@ -1,7 +1,9 @@
 use js_sys::{WebAssembly, Float32Array};
 use nalgebra::{Matrix4, Vector3};
 use wasm_bindgen::{JsCast, JsValue};
-use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer};
+use web_sys::WebGlRenderingContext;
+
+use crate::graphics::{shaders::CompiledShader, gl};
 
 /// Something that can be rendered to the screen
 pub struct Object {
@@ -100,28 +102,10 @@ impl Object {
 	pub fn render(
 		&self,
 		gl: &WebGlRenderingContext,
-		shader_option: Option<&WebGlProgram>,
-		view_matrix: &[f32],
-		projection_matrix: &[f32]
+		shader: &CompiledShader
 	) {
-		// Check that the shader exists, if not just don't render
-		if shader_option == None {
-			return
-		}
-		let shader = shader_option.unwrap();
-
-		// Set shader
-		gl.use_program(shader_option);
-
-		// Set MVP uniform values
-		let model_uniform = gl.get_uniform_location(&shader, "model");
-		gl.uniform_matrix4fv_with_f32_array(model_uniform.as_ref(), false, self.model_matrix.as_slice());
-
-		let view_uniform = gl.get_uniform_location(&shader, "view");
-		gl.uniform_matrix4fv_with_f32_array(view_uniform.as_ref(), false, view_matrix);
-
-		let projection_uniform = gl.get_uniform_location(&shader, "projection");
-		gl.uniform_matrix4fv_with_f32_array(projection_uniform.as_ref(), false, projection_matrix);
+		// Set Model uniform value
+		gl::set_mat4_uniform(gl, &shader.model_uniform, self.model_matrix.as_slice());
 
 		// Set vertex buffer
 		gl.buffer_data_with_array_buffer_view(WebGlRenderingContext::ARRAY_BUFFER, &self.js_vertex_buffer, WebGlRenderingContext::STATIC_DRAW);

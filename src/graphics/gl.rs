@@ -1,7 +1,7 @@
 use wasm_bindgen::JsCast;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
 
-use super::shaders::ShaderSource;
+use super::shaders::{ShaderSource, Uniform};
 
 /// Compiles and links a shader program
 ///
@@ -110,6 +110,21 @@ pub fn link_program(
 		Err(context
 			.get_program_info_log(&program)
 			.unwrap_or_else(|| String::from("Unknown error creating program object")))
+	}
+}
+
+/// Sets a mat4 type uniform
+///
+/// * `context` - rendering context to set uniform in
+/// * `location` - the location of the uniform
+/// * `matrix` - the value to be set
+pub fn set_mat4_uniform(context: &WebGlRenderingContext, location: &Option<Uniform>, matrix: &[f32]) {
+	match location {
+		Some(uniform) => {
+			let location = uniform.location.as_ref();
+			context.uniform_matrix4fv_with_f32_array(location, false, matrix);
+		}
+		_ => ()
 	}
 }
 

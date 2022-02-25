@@ -29,7 +29,8 @@ impl WebApp {
 
 		// Initialize world and graphics
 		let world = World::init();
-		let graphics = Graphics::init();
+		let mut graphics = Graphics::init();
+		graphics.compile_shaders();
 
 		// Return web app
 		WebApp { graphics: graphics, world: world }
