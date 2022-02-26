@@ -1,5 +1,5 @@
 use js_sys::{WebAssembly, Float32Array};
-use nalgebra::{Matrix4, Vector3};
+use nalgebra::{Matrix4, Vector3, Point3};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::WebGlRenderingContext;
 
@@ -35,9 +35,26 @@ pub struct Object {
 }
 #[allow(dead_code)]
 impl Object {
+	/// Change the scale of this object relative to the world
+	///
+	/// * `scale` - the scale to set, 1.0 being bounded at 2 units^3
+	pub fn change_scale(&mut self, scale: f32) {
+		self.scale = scale;
+		self.scale_matrix = Matrix4::new_scaling(scale);
+	}
+
 	/// Get the name of the shader to use when rendering this object
 	pub fn get_shader_name(&self) -> &'static str {
 		self.shader_name
+	}
+
+	/// Moves this object in some direction over some vector
+	///
+	/// * `direction` - the vector to move this object by
+	pub fn move_dir(&mut self, direction: Vector3<f32>) {
+		let position = self.position + direction;
+		self.position = position;
+		self.translation_matrix = Matrix4::new_translation(&position);
 	}
 
 	/// Creates a new Object
@@ -119,5 +136,32 @@ impl Object {
 
 		// Draw
 		gl.draw_elements_with_i32(WebGlRenderingContext::TRIANGLES, self.triangle_indices.len() as i32, WebGlRenderingContext::UNSIGNED_BYTE, 0);
+	}
+
+	/// Rotate this object in all directions
+	///
+	/// * `pitch` -  how much this object is pitched up from the horizon
+	/// * `yaw` - how much this object is yawed clockwise (when viewed from above)
+	/// * `roll` - how much this object is rolled clockwise
+	pub fn rotate(&mut self, pitch: f32, yaw: f32, roll: f32) {
+
+	}
+
+	/// Set absolute rotations for this object
+	///
+	/// * `pitch` -  how much this object is pitched up from the horizon
+	/// * `yaw` - how much this object is yawed clockwise (when viewed from above)
+	/// * `roll` - how much this object is rolled clockwise
+	pub fn set_rotation(&mut self, pitch: f32, yaw: f32, roll: f32) {
+
+	}
+
+	/// Teleports this object to a new position in the world
+	///
+	/// * `position` - the position to teleport to
+	/// Specifically moves the origin point of this object to this position
+	pub fn teleport(&mut self, position: Vector3<f32>) {
+		self.position = position;
+		self.translation_matrix = Matrix4::new_translation(&position);
 	}
 }
