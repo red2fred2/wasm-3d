@@ -188,6 +188,20 @@ impl Object {
 		self.update_model_matrix();
 	}
 
+	/// Sets new geometry for this object
+	///
+	/// * `vertices` - A vector of vertices optimized for rendering vs physics
+	/// Stored like [x1, y2, z1, x2, y2, z2]
+	fn set_vertices(&mut self, vertices: Vec<f32>) {
+		// Create vertex array from these new vertices
+		let vertices_location = self.vertices.as_ptr() as u32 / 4;
+		self.js_vertex_buffer = js_sys::Float32Array::new(&self.js_memory)
+            .subarray(vertices_location, vertices_location + vertices.len() as u32);
+
+		// Set vertices
+		self.vertices = vertices;
+	}
+
 	/// Teleports this object to a new position in the world
 	///
 	/// * `position` - the position to teleport to
