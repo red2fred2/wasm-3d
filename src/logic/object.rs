@@ -23,6 +23,8 @@ pub struct Object {
 	orientation_quaternion: UnitQuaternion<f32>,
 	/// The position of this object's origin in world space
 	position: Vector3<f32>,
+	/// The rotation matrix for rendering
+	rotation_matrix: Matrix4<f32>,
 	/// The scale of this object compared to world space
 	scale: f32,
 	/// The scale matrix for rendering
@@ -59,7 +61,7 @@ impl Object {
 		let position = self.position + direction;
 		self.position = position;
 		self.translation_matrix = Matrix4::new_translation(&position);
-		self.model_matrix = self.translation_matrix * self.scale_matrix;
+		self.update_model_matrix();
 	}
 
 	/// Creates a new Object
@@ -111,6 +113,7 @@ impl Object {
 			orientation_quaternion,
 			position,
 			translation_matrix,
+			rotation_matrix,
 			scale,
 			scale_matrix,
 			shader_name,
@@ -157,6 +160,8 @@ impl Object {
 	fn rotate(&mut self, pitch: f32, yaw: f32, roll: f32) {
 		let rotation = UnitQuaternion::from_euler_angles(roll, pitch, yaw);
 		self.orientation_quaternion *= rotation;
+		self.rotation_matrix = quat_to_mat4(&self.orientation_quaternion);
+		self.update_model_matrix();
 	}
 
 	/// Sets the rotation of this object to aim in the same direction as a vector
@@ -168,6 +173,8 @@ impl Object {
 	fn set_direction_from_vector(&mut self, vector: Vector3<f32>, roll: f32) {
 		let axis = UnitVector3::new_normalize(vector);
 		self.orientation_quaternion = UnitQuaternion::from_axis_angle(&axis, roll);
+		self.rotation_matrix = quat_to_mat4(&self.orientation_quaternion);
+		self.update_model_matrix();
 	}
 
 	/// Set absolute rotations for this object
@@ -177,6 +184,8 @@ impl Object {
 	/// * `roll` - how much this object is rolled clockwise
 	fn set_rotation(&mut self, pitch: f32, yaw: f32, roll: f32) {
 		self.orientation_quaternion = UnitQuaternion::from_euler_angles(roll, pitch, yaw);
+		self.rotation_matrix = quat_to_mat4(&self.orientation_quaternion);
+		self.update_model_matrix();
 	}
 
 	/// Teleports this object to a new position in the world
@@ -186,6 +195,7 @@ impl Object {
 	fn teleport(&mut self, position: Vector3<f32>) {
 		self.position = position;
 		self.translation_matrix = Matrix4::new_translation(&position);
+		self.update_model_matrix();
 	}
 
 	/// Update function for this object
@@ -193,10 +203,16 @@ impl Object {
 	/// Will probably need to be overloaded or whatever rust's version is
 	/// by types of object.
 	///
-	/// * `dt` - change in time since this object has been updated
+	/// * `dt` - change in time since this object has been updated (milliseconds)
 	pub fn update(&mut self, dt: f32) {
-		let dir = Vector3::new(0.0, 0.0, 1.0);
-		let vector = dir * (dt/1000.0);
-		self.move_dir(vector);
+		// let dir = Vector3::new(0.0, 0.0, 1.0);
+		// let vector = dir * (dt/1000.0);
+		// self.move_dir(vector);
+		self.rotate(dt / 1000.0, 0.0, 0.0);
+	}
+
+	/// Do the math to update the model matrix
+	fn update_model_matrix(&mut self) {
+		self.model_matrix = self.translation_matrix * self.rotation_matrix * self.scale_matrix;
 	}
 }
