@@ -35,7 +35,13 @@ impl World {
 	///
 	/// * `dt` - the time difference since this function last ran
 	pub fn update(&mut self, dt: f32) {
+		// Update timer
 		self.time_elapsed += dt;
+
+		// Update objects
+		for object in &mut self.objects {
+			object.update(dt);
+		}
 	}
 }
 
@@ -77,9 +83,8 @@ fn load_objects() -> Vec<Object> {
 	];
 
 	let position = Vector3::new(0.0, 0.0, 0.0);
-	let rotation = Vector3::new(0.0, 0.0, 0.0);
 	let scale = 1.0;
-	objects.push(Object::new(position, rotation, scale, "3d orange", indices, vertices));
+	objects.push(Object::new(position, 0.0, 0.0, 0.0, scale, "3d orange", indices, vertices));
 
 	objects
 }

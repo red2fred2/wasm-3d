@@ -104,7 +104,7 @@ pub fn compile_shaders(&mut self) {
 
 		// Create generic camera
 		let origin = Point3::new(0.0, 0.0, 0.0);
-		let starting_location = Point3::new(1.0, 0.0, 4.0);
+		let starting_location = Point3::new(0.0, 0.0, 4.0);
 		let camera = Camera::new_targeted(starting_location, origin, 0.0);
 
 		// Create projection matrix
@@ -150,15 +150,6 @@ pub fn compile_shaders(&mut self) {
 		gl.clear_color(0.0, 0.0, 0.0, 1.0);
 		gl.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
 
-		// Move camera
-		let timer = world.get_time_elapsed();
-		let cam_time = timer / 5_000.0;
-		let cam_x = 3.0 * (cam_time * 2.0 * 3.14).cos();
-		let cam_y = 3.0 * (cam_time * 2.0 * 3.14).sin();
-		let cam_z = 4.0 * cam_time.sin();
-		let cam_pos = Point3::new(cam_x, cam_y, cam_z);
-		self.camera.teleport_keep_target(cam_pos);
-
 		// Render object by object
 		let objects = world.get_objects();
 		for object in objects {
@@ -174,7 +165,6 @@ pub fn compile_shaders(&mut self) {
 					// Prepare to render
 					gl.bind_buffer(WebGlRenderingContext::ELEMENT_ARRAY_BUFFER, self.index_buffer.as_ref());
 
-					// Set shader
 					// Set shader
 					gl.use_program(shader.program.as_ref());
 
