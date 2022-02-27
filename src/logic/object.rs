@@ -7,7 +7,6 @@ use web_sys::WebGlRenderingContext;
 use crate::graphics::{shaders::CompiledShader, gl};
 
 /// Something that can be rendered to the screen
-#[allow(dead_code)]
 pub struct Object {
 	/// The JS memory allocated for this object
 	js_memory: JsValue,
