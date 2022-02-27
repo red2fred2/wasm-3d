@@ -1,5 +1,5 @@
 use js_sys::{WebAssembly, Float32Array};
-use nalgebra::{Matrix4, Vector3, UnitQuaternion, UnitVector3};
+use nalgebra::{Matrix4, Vector3, UnitQuaternion, UnitVector3, Point3};
 use nalgebra_glm::quat_to_mat4;
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::WebGlRenderingContext;
@@ -52,6 +52,26 @@ impl Object {
 	/// Get the name of the shader to use when rendering this object
 	pub fn get_shader_name(&self) -> &'static str {
 		self.shader_name
+	}
+
+	/// Gets the vertices for this object as a Vec of Point3
+	pub fn get_vertices(&self) -> Vec<Point3<f32>> {
+		let mut vertices = Vec::new();
+
+		// Yank out vertices one by one
+		let num_vertices = self.vertices.len() / 3;
+		for i in 0..num_vertices {
+			let vert = Point3::new(
+				self.vertices[i],
+				self.vertices[i + 1],
+				self.vertices[i + 2]
+			);
+
+			vertices.push(vert);
+		}
+
+
+		vertices
 	}
 
 	/// Moves this object in some direction over some vector
