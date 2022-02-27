@@ -1,5 +1,6 @@
 use js_sys::{WebAssembly, Float32Array};
 use nalgebra::{Matrix4, Vector3, UnitQuaternion, UnitVector3};
+use nalgebra_glm::quat_to_mat4;
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::WebGlRenderingContext;
 
@@ -82,10 +83,14 @@ impl Object {
 		triangle_indices: Vec<u8>,
 		vertices: Vec<f32>
 	) -> Object {
+		// Generate the orientation quaternion
+		let orientation_quaternion = UnitQuaternion::from_euler_angles(roll, pitch, yaw);
+
 		// Calculate matrices for rendering
 		let translation_matrix = Matrix4::new_translation(&position);
 		let scale_matrix = Matrix4::new_scaling(scale);
-		let model_matrix = translation_matrix * scale_matrix;
+		let rotation_matrix = quat_to_mat4(&orientation_quaternion);
+		let model_matrix = translation_matrix * rotation_matrix * scale_matrix;
 
 		// Allocate memory for vertex array
 		let memory = wasm_bindgen::memory()
@@ -97,9 +102,6 @@ impl Object {
 		let vertices_location = vertices.as_ptr() as u32 / 4;
 		let js_vertex_buffer = js_sys::Float32Array::new(&js_memory)
             .subarray(vertices_location, vertices_location + vertices.len() as u32);
-
-		// Generate the orientation quaternion
-		let orientation_quaternion = UnitQuaternion::from_euler_angles(roll, pitch, yaw);
 
 		// Return Object
 		Object {
